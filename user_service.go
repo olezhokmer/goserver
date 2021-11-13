@@ -36,7 +36,7 @@ func (u *UserService) validateEmail(email string) error {
 
 func (u *UserService) validatePass(pass string) error {
 	if len(pass) < 8 {
-		return errors.New("Password is too simple.")
+		return errors.New("Password`s length must be more than 8 symbols.")
 	} else {
 		return nil
 	}
@@ -87,32 +87,29 @@ func (u *UserService) validateBanParams(p *BanParams) error {
 	return nil
 }
 func (u *UserService) hasEnoughRights(admin User, user User) bool {
-	if admin.Role != "admin" || admin.Role != "superadmin" || user.Role == admin.Role || user.Role == "superadmin" {
+	if (admin.Role != "admin" && admin.Role != "superadmin") || (user.Role == admin.Role || user.Role == "superadmin") {
 		return false
 	}
 	return true
 }
 
-// func (u *UserService) getBanReason(email string) (string, error) {
-// 	history, err := u.banHistoryRepository.GetHistory(email)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	events := strings.Split(history, "\n")
-// 	if len(events) != 0 {
-// 		return "", errors.New("User has empty history.")
-// 	}
-
-// 	last := events[len(events)-1]
-// 	if strings.Contains(last, "Ban") != true {
-// 		return "", errors.New("User is not baned.")
-// 	} else {
-// 		splited := strings.Split(history, ".")
-// 		reason := splited[len(splited)-1]
-// 		return reason, nil
-// 	}
-// }
+func (u *UserService) getBanReason(email string) (string, error) {
+	history, err := u.banHistoryRepository.GetHistory(email)
+	if err != nil {
+		return "", err
+	}
+	events := strings.Split(history, "\n")
+	if len(events) == 0 {
+		return "",nil
+	}
+	splited := strings.Split(events[len(events) -1], "Reason:")
+	if len(splited) != 2 {
+		return "", errors.New("User is not baned.")
+	}
+	return strings.TrimSpace(splited[len(splited) -1]), nil
+}
 func (u *UserService) ban(w http.ResponseWriter, r *http.Request, user User) {
+	
 	params := &BanParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -123,24 +120,24 @@ func (u *UserService) ban(w http.ResponseWriter, r *http.Request, user User) {
 		handleError(err, w)
 		return
 	}
-	_, findErr := u.repository.Get(params.Email)
+	userToBan, findErr := u.repository.Get(params.Email)
 	if findErr != nil {
 		handleError(findErr, w)
 		return
 	}
 
-	// reason, _ := u.getBanReason(params.Email)
-	// if len(reason) != 0 {
-	// 	handleError(errors.New("User already baned. Reason: "+reason), w)
-	// 	return
-	// }
-	// if u.hasEnoughRights(user, userToBan) == false {
-	// 	w.WriteHeader(401)
-	// 	w.Write([]byte("Access denied."))
-	// 	return
-	// }
+	_, banerr := u.getBanReason(params.Email)
+	if banerr == nil {
+		handleError(errors.New("User is already banned."), w)
+		return
+	}
+	if u.hasEnoughRights(user, userToBan) == false {
+		w.WriteHeader(401)
+		w.Write([]byte("Access denied."))
+		return
+	}
 
-	event := "Ban by " + user.Email + ". " + params.Reason + "\n"
+	event := "Ban by " + user.Email + ". Reason:" + params.Reason
 	u.banHistoryRepository.Add(params.Email, event)
 
 	w.Write([]byte("Success."))
@@ -158,30 +155,31 @@ func (u *UserService) unban(w http.ResponseWriter, r *http.Request, user User) {
 		handleError(err, w)
 		return
 	}
-	_, findErr := u.repository.Get(email)
+	userToUnban, findErr := u.repository.Get(email)
 	if findErr != nil {
 		handleError(findErr, w)
 		return
 	}
+	if u.hasEnoughRights(user, userToUnban) == false {
+		w.WriteHeader(401)
+		w.Write([]byte("Access denied."))
+		return
+	}
+	_, unbanerr := u.getBanReason(email)
+	if unbanerr != nil {
+		handleError(unbanerr, w)
+		return 
+	} 
+	
 
-	// reason, _ := u.getBanReason(email)
-	// if len(strings.TrimSpace(reason)) != 0 {
-	// 	handleError(errors.New("User banned. Reason: "+reason), w)
-	// 	return
-	// }
-	// if u.hasEnoughRights(user, userToBan) == false {
-	// 	w.WriteHeader(401)
-	// 	w.Write([]byte("Access denied."))
-	// 	return
-	// }
-
-	event := "Unbaned by " + user.Email + " at " + strconv.FormatInt(time.Now().Unix(), 10) + "\n"
+	event := "Unbaned by " + user.Email + " at " + strconv.FormatInt(time.Now().Unix(), 10)
 	u.banHistoryRepository.Add(email, event)
 
 	w.Write([]byte("Success."))
 }
 
 func (u *UserService) inspect(w http.ResponseWriter, r *http.Request, user User) {
+	
 	var buf []byte
 	res, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -200,12 +198,11 @@ func (u *UserService) inspect(w http.ResponseWriter, r *http.Request, user User)
 		handleError(findErr, w)
 		return
 	}
-
-	// if u.hasEnoughRights(user, userToInspect) == false {
-	// 	w.WriteHeader(401)
-	// 	w.Write([]byte("Access denied."))
-	// 	return
-	// }
+	if u.hasEnoughRights(user, userToInspect) == false {
+		w.WriteHeader(401)
+		w.Write([]byte("Access denied."))
+		return
+	}
 	history, historyErr := u.banHistoryRepository.GetHistory(userToInspect.Email)
 	if historyErr != nil {
 		handleError(findErr, w)
@@ -213,9 +210,9 @@ func (u *UserService) inspect(w http.ResponseWriter, r *http.Request, user User)
 	}
 
 	inspectInfo := &InspectInfo{
-		Email:        user.Email,
-		FavoriteCake: user.FavoriteCake,
-		Role:         user.Role,
+		Email:        userToInspect.Email,
+		FavoriteCake: userToInspect.FavoriteCake,
+		Role:         userToInspect.Role,
 		History:      history,
 	}
 	buf, err = json.Marshal(inspectInfo)
@@ -228,7 +225,7 @@ func (u *UserService) inspect(w http.ResponseWriter, r *http.Request, user User)
 	w.Write(buf)
 }
 
-func (u *UserService) getCakeHandler(w http.ResponseWriter, r *http.Request, user User) {
+func getCakeHandler(w http.ResponseWriter, r *http.Request, user User) {
 	w.Write([]byte(user.FavoriteCake))
 }
 
@@ -392,4 +389,87 @@ func (u *UserService) Register(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("registered"))
+}
+func (u *UserService) promote(w http.ResponseWriter, r *http.Request, user User) {
+	res, err := io.ReadAll(r.Body)
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+	email := string(res)
+	if err := u.validateEmail(email); err != nil {
+		handleError(err, w)
+		return
+	}
+	if user.Role != "superadmin" {
+		w.WriteHeader(401)
+		w.Write([]byte("Access denied."))
+		return
+	}
+	userToPromote, err := u.repository.Get(email)
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+	if userToPromote.Role != "user" {
+		handleError(errors.New("User is already promoted."), w)
+		return
+	}
+
+	updated := User{
+		Email:          userToPromote.Email,
+		PasswordDigest: userToPromote.PasswordDigest,
+		FavoriteCake:   userToPromote.FavoriteCake,
+		Role:           "admin",
+	}
+	err = u.repository.Update(userToPromote.Email, updated)
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Success."))
+}
+
+func (u *UserService) fire(w http.ResponseWriter, r *http.Request, admin User) {
+	res, err := io.ReadAll(r.Body)
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+	email := string(res)
+	if err := u.validateEmail(email); err != nil {
+		handleError(err, w)
+		return
+	}
+	if admin.Role != "superadmin" {
+		w.WriteHeader(401)
+		w.Write([]byte("Access denied."))
+		return
+	}
+	userToFire, err := u.repository.Get(email)
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+	if userToFire.Role == "user" {
+		handleError(errors.New("User is not admin."), w)
+		return
+	}
+
+	updated := User{
+		Email:          userToFire.Email,
+		PasswordDigest: userToFire.PasswordDigest,
+		FavoriteCake:   userToFire.FavoriteCake,
+		Role:           "user",
+	}
+	err = u.repository.Update(userToFire.Email, updated)
+	if err != nil {
+		handleError(err, w)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	w.Write([]byte("Success."))
 }

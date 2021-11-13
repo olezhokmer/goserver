@@ -39,7 +39,7 @@ func wrapJwt(jwt *JWTService, f func(http.ResponseWriter, *http.Request, *JWTSer
 
 type ProtectedHandler func(rw http.ResponseWriter, r *http.Request, u User)
 
-func (j *JWTService) jwtAuth(users UserRepository, h ProtectedHandler) http.HandlerFunc {
+func (j *JWTService) jwtAuth(userService *UserService, h ProtectedHandler) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		token := strings.TrimPrefix(authHeader, "Bearer ")
@@ -49,10 +49,16 @@ func (j *JWTService) jwtAuth(users UserRepository, h ProtectedHandler) http.Hand
 			rw.Write([]byte("unauthorized"))
 			return
 		}
-		user, err := users.Get(auth.Email)
-		if err != nil {
+		user, err := userService.repository.Get(auth.Email)
+		if err != nil || len(user.Email) == 0 {
 			rw.WriteHeader(401)
 			rw.Write([]byte("unauthorized"))
+			return
+		}
+		reason, banErr := userService.getBanReason(user.Email)
+		if banErr == nil {
+			rw.WriteHeader(401)
+			rw.Write([]byte(reason))
 			return
 		}
 		h(rw, r, user)
