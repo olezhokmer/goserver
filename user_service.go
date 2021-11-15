@@ -100,16 +100,16 @@ func (u *UserService) getBanReason(email string) (string, error) {
 	}
 	events := strings.Split(history, "\n")
 	if len(events) == 0 {
-		return "",nil
+		return "", nil
 	}
-	splited := strings.Split(events[len(events) -1], "Reason:")
+	splited := strings.Split(events[len(events)-1], "Reason:")
 	if len(splited) != 2 {
 		return "", errors.New("User is not baned.")
 	}
-	return strings.TrimSpace(splited[len(splited) -1]), nil
+	return strings.TrimSpace(splited[len(splited)-1]), nil
 }
 func (u *UserService) ban(w http.ResponseWriter, r *http.Request, user User) {
-	
+
 	params := &BanParams{}
 	err := json.NewDecoder(r.Body).Decode(params)
 	if err != nil {
@@ -168,9 +168,8 @@ func (u *UserService) unban(w http.ResponseWriter, r *http.Request, user User) {
 	_, unbanerr := u.getBanReason(email)
 	if unbanerr != nil {
 		handleError(unbanerr, w)
-		return 
-	} 
-	
+		return
+	}
 
 	event := "Unbaned by " + user.Email + " at " + strconv.FormatInt(time.Now().Unix(), 10)
 	u.banHistoryRepository.Add(email, event)
@@ -179,7 +178,7 @@ func (u *UserService) unban(w http.ResponseWriter, r *http.Request, user User) {
 }
 
 func (u *UserService) inspect(w http.ResponseWriter, r *http.Request, user User) {
-	
+
 	var buf []byte
 	res, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -312,6 +311,11 @@ func (u *UserService) updateEmail(w http.ResponseWriter, r *http.Request, user U
 	err = u.validateEmail(email)
 	if err != nil {
 		handleError(err, w)
+		return
+	}
+	usr, _ := u.repository.Get(email)
+	if len(usr.Email) != 0 {
+		handleError(errors.New("user with this email already exists."), w)
 		return
 	}
 	newUser := User{
