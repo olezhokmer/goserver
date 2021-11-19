@@ -69,28 +69,6 @@ func main() {
 	hub := newHub()
 	go hub.run()
 
-	msgs, consErr := ch.Consume(
-		q.Name, // queue
-		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
-		false,  // no-local
-		false,  // no-wait
-		nil,    // args
-	)
-	failOnError(consErr, "Failed to register a consumer")
-
-	forever := make(chan bool)
-
-	go func() {
-		for d := range msgs {
-			log.Printf("Received a message: %s", d.Body)
-		}
-	}()
-
-	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-	<-forever
-
 	r.HandleFunc("/admin/socket", jwtService.jwtAuthSocket(userService, hub))
 	r.HandleFunc("/user/register", logRequest(userService.Register)).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, userService.JWT))).Methods(http.MethodPost)
@@ -107,6 +85,7 @@ func main() {
 		Addr:    ":8080",
 		Handler: r,
 	}
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 	go func() {
@@ -116,6 +95,23 @@ func main() {
 		srv.Shutdown(ctx)
 	}()
 	log.Println("Server started, hit Ctrl+C to stop")
+	msgs, consErr := ch.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+	failOnError(consErr, "Failed to register a consumer")
+
+	go func() {
+		for d := range msgs {
+			log.Printf("Received a message: %s", d.Body)
+		}
+	}()
+
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Println("Server exited with error:", err)
