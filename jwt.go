@@ -1,6 +1,9 @@
 package main
 
 import (
+	"bufio"
+	"errors"
+	"net"
 	"net/http"
 	"strings"
 
@@ -62,5 +65,38 @@ func (j *JWTService) jwtAuth(userService *UserService, h ProtectedHandler) http.
 			return
 		}
 		h(rw, r, user)
+	}
+}
+func (j *JWTService) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return nil, nil, errors.New("hijack not supported")
+}
+func (j *JWTService) jwtAuthSocket(userService *UserService, hub *Hub) http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		auth, err := j.ParseJWT(token)
+		if err != nil {
+			rw.WriteHeader(401)
+			rw.Write([]byte("unauthorized"))
+			return
+		}
+		user, err := userService.repository.Get(auth.Email)
+		if err != nil || len(user.Email) == 0 {
+			rw.WriteHeader(401)
+			rw.Write([]byte("unauthorized"))
+			return
+		}
+		if user.Role == "user" {
+			rw.WriteHeader(401)
+			rw.Write([]byte("Access denied."))
+			return
+		}
+		reason, banErr := userService.getBanReason(user.Email)
+		if banErr == nil {
+			rw.WriteHeader(401)
+			rw.Write([]byte(reason))
+			return
+		}
+		serveWs(hub, rw, r)
 	}
 }

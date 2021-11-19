@@ -2,16 +2,16 @@ package main
 
 import (
 	"context"
+	"crypto/md5"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
-	"crypto/md5"
 
 	"github.com/gorilla/mux"
+	"github.com/streadway/amqp"
 )
-
 
 func (u *UserService) createSuperAdmin() {
 	superadmin := User{
@@ -32,17 +32,66 @@ func (u *UserService) createAdmin() {
 	}
 	u.repository.Add("admin@gmail.com", admin)
 }
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
 
 func main() {
 	r := mux.NewRouter()
 
-	userService := NewUserService()
+	conn, conErr := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	failOnError(conErr, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, chErr := conn.Channel()
+	failOnError(chErr, "Failed to open a channel")
+	defer ch.Close()
+
+	q, qErr := ch.QueueDeclare(
+		"hello", // name
+		false,   // durable
+		false,   // delete when unused
+		false,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+	failOnError(qErr, "Failed to declare a queue")
+
+	rbqService := NewRbqService(ch, q)
+	userService := NewUserService(rbqService)
 	jwtService, jwtErr := NewJWTService("pubkey.rsa", "privkey.rsa")
 	userService.createSuperAdmin()
 	if jwtErr != nil {
 		panic(jwtErr)
 	}
+	hub := newHub()
+	go hub.run()
 
+	msgs, consErr := ch.Consume(
+		q.Name, // queue
+		"",     // consumer
+		true,   // auto-ack
+		false,  // exclusive
+		false,  // no-local
+		false,  // no-wait
+		nil,    // args
+	)
+	failOnError(consErr, "Failed to register a consumer")
+
+	forever := make(chan bool)
+
+	go func() {
+		for d := range msgs {
+			log.Printf("Received a message: %s", d.Body)
+		}
+	}()
+
+	log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
+	<-forever
+
+	r.HandleFunc("/admin/socket", jwtService.jwtAuthSocket(userService, hub))
 	r.HandleFunc("/user/register", logRequest(userService.Register)).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, userService.JWT))).Methods(http.MethodPost)
 	r.HandleFunc("/cake", logRequest(jwtService.jwtAuth(userService, getCakeHandler))).Methods(http.MethodGet)

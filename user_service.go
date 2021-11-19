@@ -16,12 +16,14 @@ import (
 type UserService struct {
 	repository           UserRepository
 	banHistoryRepository BanHistoryRepository
+	rbqService           *RbqService
 }
 
-func NewUserService() *UserService {
+func NewUserService(rbqService *RbqService) *UserService {
 	return &UserService{
 		repository:           NewInMemoryUserStorage(),
 		banHistoryRepository: NewInMemoryBanHistoryStorage(),
+		rbqService:           rbqService,
 	}
 }
 
@@ -138,6 +140,7 @@ func (u *UserService) ban(w http.ResponseWriter, r *http.Request, user User) {
 	}
 
 	event := "Ban by " + user.Email + ". Reason:" + params.Reason
+	u.rbqService.sendMsg("Admin " + user.Email + " banned user " + userToBan.Email + ". Reason: " + params.Reason)
 	u.banHistoryRepository.Add(params.Email, event)
 
 	w.Write([]byte("Success."))
@@ -172,6 +175,7 @@ func (u *UserService) unban(w http.ResponseWriter, r *http.Request, user User) {
 	}
 
 	event := "Unbaned by " + user.Email + " at " + strconv.FormatInt(time.Now().Unix(), 10)
+	u.rbqService.sendMsg("Admin " + user.Email + " unbanned user " + userToUnban.Email + ".")
 	u.banHistoryRepository.Add(email, event)
 
 	w.Write([]byte("Success."))
@@ -268,6 +272,7 @@ func (u *UserService) JWT(w http.ResponseWriter, r *http.Request, jwtService *JW
 		handleError(err, w)
 		return
 	}
+	u.rbqService.sendMsg("User " + user.Email + " authorized.")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(token))
 }
@@ -296,7 +301,7 @@ func (u *UserService) updateCake(w http.ResponseWriter, r *http.Request, user Us
 		handleError(err, w)
 		return
 	}
-
+	u.rbqService.sendMsg("User " + user.Email + " updated cake. New cake is " + cake + ".")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Success."))
 }
@@ -330,7 +335,7 @@ func (u *UserService) updateEmail(w http.ResponseWriter, r *http.Request, user U
 		handleError(err, w)
 		return
 	}
-
+	u.rbqService.sendMsg("User " + user.Email + " updated email. New cake is " + email + ".")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Success."))
 }
@@ -362,6 +367,7 @@ func (u *UserService) updatePassword(w http.ResponseWriter, r *http.Request, use
 		return
 	}
 
+	u.rbqService.sendMsg("User " + user.Email + " updated password.")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Success."))
 }
@@ -391,6 +397,7 @@ func (u *UserService) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	u.rbqService.sendMsg("User " + newUser.Email + " registered.")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("registered"))
 }
