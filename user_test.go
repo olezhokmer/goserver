@@ -43,7 +43,7 @@ func prepareParams(t *testing.T, params map[string]interface{}) io.Reader {
 }
 func newTestUserService() *UserService {
 	return &UserService{
-		repository: NewInMemoryUserStorage(),
+		repository:           NewInMemoryUserStorage(),
 		banHistoryRepository: NewInMemoryBanHistoryStorage(),
 	}
 }
@@ -201,7 +201,7 @@ func TestUsers_JWT(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -210,7 +210,7 @@ func TestUsers_JWT(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		res := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		res := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": "12345678",
@@ -228,7 +228,7 @@ func TestUsers_JWT(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -236,7 +236,7 @@ func TestUsers_JWT(t *testing.T) {
 			},
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": "12345678",
@@ -266,7 +266,7 @@ func TestUsers_JWT(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -275,7 +275,7 @@ func TestUsers_JWT(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		res := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		res := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": "12345678",
@@ -316,7 +316,7 @@ func TestUsers_JWT(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -325,7 +325,7 @@ func TestUsers_JWT(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": "12345678",
@@ -346,7 +346,7 @@ func TestUsers_JWT(t *testing.T) {
 
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp = doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp = doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "2@gmail.com",
 				"password": "12345678",
@@ -365,7 +365,7 @@ func TestUsers_JWT(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -374,7 +374,7 @@ func TestUsers_JWT(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": "12345678",
@@ -394,7 +394,7 @@ func TestUsers_JWT(t *testing.T) {
 		doRequest(req, nil)
 
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
-		resp = doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp = doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": pass,
@@ -412,7 +412,7 @@ func TestUsers_JWT(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -421,7 +421,7 @@ func TestUsers_JWT(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "1@gmail.com",
 				"password": "12345678",
@@ -455,7 +455,7 @@ func Test_admin_system(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -464,13 +464,13 @@ func Test_admin_system(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "superadmin@gmail.com",
 				"password": "12345678",
 			},
 		)))
-		
+
 		jwt := string(resp.body)
 		bearer := "Bearer " + jwt
 
@@ -494,13 +494,13 @@ func Test_admin_system(t *testing.T) {
 		}
 		ts := httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "superadmin@gmail.com",
 				"password": "12345678",
 			},
 		)))
-		
+
 		jwt := string(resp.body)
 		bearer := "Bearer " + jwt
 
@@ -515,7 +515,7 @@ func Test_admin_system(t *testing.T) {
 		assertStatus(t, 422, resp)
 		assertBody(t, "User is already promoted.", resp)
 	})
-	
+
 	t.Run("fire default user", func(t *testing.T) {
 		u := newTestUserService()
 		u.createSuperAdmin()
@@ -527,7 +527,7 @@ func Test_admin_system(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -536,13 +536,13 @@ func Test_admin_system(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "superadmin@gmail.com",
 				"password": "12345678",
 			},
 		)))
-		
+
 		jwt := string(resp.body)
 		bearer := "Bearer " + jwt
 
@@ -568,13 +568,13 @@ func Test_admin_system(t *testing.T) {
 
 		ts := httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "superadmin@gmail.com",
 				"password": "12345678",
 			},
 		)))
-		
+
 		jwt := string(resp.body)
 		bearer := "Bearer " + jwt
 
@@ -600,7 +600,7 @@ func Test_admin_system(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -609,13 +609,13 @@ func Test_admin_system(t *testing.T) {
 		)))
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "admin@gmail.com",
 				"password": "12345678",
 			},
 		)))
-		
+
 		jwt := string(resp.body)
 		bearer := "Bearer " + jwt
 
@@ -640,7 +640,7 @@ func Test_admin_system(t *testing.T) {
 
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -651,7 +651,7 @@ func Test_admin_system(t *testing.T) {
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 		defer ts.Close()
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "admin@gmail.com",
 				"password": "12345678",
@@ -687,11 +687,10 @@ func Test_admin_system(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
 
-
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 		defer ts.Close()
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "admin@gmail.com",
 				"password": "12345678",
@@ -726,7 +725,7 @@ func Test_admin_system(t *testing.T) {
 
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -737,7 +736,7 @@ func Test_admin_system(t *testing.T) {
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 		defer ts.Close()
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "admin@gmail.com",
 				"password": "12345678",
@@ -779,7 +778,7 @@ func Test_admin_system(t *testing.T) {
 
 		ts := httptest.NewServer(http.HandlerFunc(u.Register))
 		defer ts.Close()
-		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":         "1@gmail.com",
 				"favorite_cake": "abc",
@@ -790,7 +789,7 @@ func Test_admin_system(t *testing.T) {
 		ts = httptest.NewServer(http.HandlerFunc(wrapJwt(j, u.JWT)))
 		defer ts.Close()
 
-		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t, 
+		resp := doRequest(http.NewRequest(http.MethodPost, ts.URL, prepareParams(t,
 			map[string]interface{}{
 				"email":    "admin@gmail.com",
 				"password": "12345678",

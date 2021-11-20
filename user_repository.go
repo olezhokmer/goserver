@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 )
+
 type BanParams struct {
 	Email  string `json:"email"`
 	Reason string `json:"reason"`
