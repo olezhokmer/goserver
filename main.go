@@ -10,7 +10,30 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/streadway/amqp"
+)
+
+var (
+	regProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "registered",
+		Help: "The total number of registrations",
+	})
+	cakeProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "cakes",
+		Help: "The total number of cakes given",
+	})
+
+	httpProcessed = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "requests",
+		Help: "time and path of requests.",
+	}, []string{"time", "path"})
+	rabbitMqMsgProcessed = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "rbqMessages",
+		Help: "The total number of rabbit mq messages.",
+	})
 )
 
 func (u *UserService) createSuperAdmin() {
@@ -69,6 +92,7 @@ func main() {
 	hub := newHub()
 	go hub.run()
 
+	r.Handle("/metrics", promhttp.Handler())
 	r.HandleFunc("/admin/socket", jwtService.jwtAuthSocket(userService, hub))
 	r.HandleFunc("/user/register", logRequest(userService.Register)).Methods(http.MethodPost)
 	r.HandleFunc("/user/jwt", logRequest(wrapJwt(jwtService, userService.JWT))).Methods(http.MethodPost)
@@ -109,6 +133,8 @@ func main() {
 	go func() {
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+			hub.broadcast <- []byte(d.Body)
+			rabbitMqMsgProcessed.Inc()
 		}
 	}()
 

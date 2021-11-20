@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type logWriter struct {
@@ -33,6 +35,11 @@ func logRequest(h http.HandlerFunc) http.HandlerFunc {
 			log.Println("Could not read request body", err)
 			handleError(errors.New("could not read request"), rw)
 			return
+		} else {
+			httpProcessed.With(prometheus.Labels{
+				"time": time.Now().String(),
+				"path": r.URL.Path,
+			}).Inc()
 		}
 		r.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 		started := time.Now()

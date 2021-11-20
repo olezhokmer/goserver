@@ -4,11 +4,19 @@ go 1.17
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/openware/rango v0.0.0-20210909144821-b2239c24555b // indirect
+	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.26.0 // indirect
+	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/ramya-rao-a/go-outline v0.0.0-20210608161538-9736a4bde949 // indirect
 	github.com/sergi/go-diff v1.1.0 // indirect
 	github.com/streadway/amqp v1.0.0 // indirect
@@ -19,6 +27,7 @@ require (
 	golang.org/x/tools v0.1.8-0.20211014194737-fc98fb2abd48 // indirect
 	golang.org/x/tools/gopls v0.7.3 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/protobuf v1.26.0-rc.1 // indirect
 	honnef.co/go/tools v0.2.0 // indirect
 	mvdan.cc/gofumpt v0.1.1 // indirect
 	mvdan.cc/xurls/v2 v2.3.0 // indirect

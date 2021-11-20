@@ -230,6 +230,7 @@ func (u *UserService) inspect(w http.ResponseWriter, r *http.Request, user User)
 
 func getCakeHandler(w http.ResponseWriter, r *http.Request, user User) {
 	w.Write([]byte(user.FavoriteCake))
+	cakeProcessed.Inc()
 }
 
 func (u *UserService) getUserInformation(w http.ResponseWriter, r *http.Request, user User) {
@@ -400,6 +401,7 @@ func (u *UserService) Register(w http.ResponseWriter, r *http.Request) {
 	u.rbqService.sendMsg("User " + newUser.Email + " registered.")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("registered"))
+	regProcessed.Inc()
 }
 func (u *UserService) promote(w http.ResponseWriter, r *http.Request, user User) {
 	res, err := io.ReadAll(r.Body)
